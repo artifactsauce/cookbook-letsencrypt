@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -eu
+
+die() {
+    echo "$(date) - [ERROR]" "$@" >&2
+    exit 1
+}
+
+LETSENCRYPT_ROOT="<%= @repository_path %>"
+LETSENCRYPT_HTTP_SERVICE="<%= @http_service_name %>"
+
+cd $LETSENCRYPT_ROOT || die "Directory not founds: ${LETSENCRYPT_ROOT}"
+
+service ${LETSENCRYPT_HTTP_SERVICE} stop
+
+./letsencrypt-auto certonly \
+<% node["letsencrypt"]["urls"].each do |url| %>
+	           -d "<%= url %>" \
+<% end %>
+	           --renew-by-default
+
+service ${LETSENCRYPT_HTTP_SERVICE} start
