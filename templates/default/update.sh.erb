@@ -7,10 +7,10 @@ die() {
     exit 1
 }
 
-LETSENCRYPT_ROOT="<%= @repository_path %>"
+LETSENCRYPT_REPOSITORY="<%= @repository_path %>"
 LETSENCRYPT_HTTP_SERVICE="<%= @http_service_name %>"
 
-cd $LETSENCRYPT_ROOT || die "Directory not founds: ${LETSENCRYPT_ROOT}"
+cd $LETSENCRYPT_REPOSITORY || die "Directory not founds: ${LETSENCRYPT_REPOSITORY}"
 
 service ${LETSENCRYPT_HTTP_SERVICE} stop
 
