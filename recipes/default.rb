@@ -7,14 +7,15 @@
 # All rights reserved - Do Not Redistribute
 #
 
-cache_path = Chef::Config[:file_cache_path]
-repository_path = cache_path + '/' + node['letsencrypt']['repository']['local']
+parent_path = node['letsencrypt']['repository']['local']['parent_path']
+repository_path = parent_path + '/' + node['letsencrypt']['repository']['local']['name']
+update_script_path = node['letsencrypt']['script']['parent_path'] + '/letsencrypt-update.sh'
 http_service_name = node['letsencrypt']['http_service']['name']
 urls = node['letsencrypt']['urls']
 
 
 bash 'clone_repository' do
-  cwd cache_path
+  cwd parent_path
   code <<-EOH
 git clone #{node['letsencrypt']['repository']['remote']}
 EOH
@@ -34,7 +35,7 @@ EOH
   end
 end
 
-template "/var/chef/cache/letsencrypt-update.sh" do
+template update_script_path do
   source "update.sh.erb"
   mode "0755"
   variables (
@@ -45,7 +46,12 @@ template "/var/chef/cache/letsencrypt-update.sh" do
   )
 end
 
-template "/etc/cron.d/letsencrypt" do
+template "/etc/cron.d/#{node['letsencrypt']['repository']['local']['name']}" do
   source "cron.erb"
   mode "0644"
+  variables (
+    {
+      script_path: update_script_path,
+    }
+  )
 end
