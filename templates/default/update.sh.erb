@@ -18,7 +18,7 @@ toggle_cache() {
             local toggle="on"
             ;;
         *)
-            return 1
+            die "Unexpected value: $1"
     esac
 
     curl -X PATCH "https://api.cloudflare.com/client/v4/zones/<%= @cdn['configure']['zone_id'] %>/settings/development_mode" \
