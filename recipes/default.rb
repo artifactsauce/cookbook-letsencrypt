@@ -42,6 +42,7 @@ template update_script_path do
     {
       repository_path: repository_path,
       http_service_name: http_service_name,
+      cdn: node['letsencrypt']['cdn'],
     }
   )
 end

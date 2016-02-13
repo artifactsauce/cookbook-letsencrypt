@@ -7,17 +7,47 @@ die() {
     exit 1
 }
 
+toggle_cache() {
+    <% case @cdn['provider'] %>
+    <% when 'cloudflare' then %>
+    case $1 in
+        enable)
+            local toggle="off"
+            ;;
+        disable)
+            local toggle="on"
+            ;;
+        *)
+            return 1
+    esac
+
+    curl -X PATCH "https://api.cloudflare.com/client/v4/zones/<%= @cdn['configure']['zone_id'] %>/settings/development_mode" \
+         -H "X-Auth-Email: <%= @cdn['configure']['auth_email'] %>" \
+         -H "X-Auth-Key: <%= @cdn['configure']['auth_key'] %>" \
+         -H "Content-Type: application/json" \
+         --data '{"value":"$toggle"}'
+    <% end # case @cdn['provider'] %>
+    return 0
+}
+
+<% use_cdn = @cdn['enabled'] ? '0' : '1' %>
+
 LETSENCRYPT_REPOSITORY="<%= @repository_path %>"
 LETSENCRYPT_HTTP_SERVICE="<%= @http_service_name %>"
+LETSENCRYPT_USE_CDN="<%= use_cdn %>"
 
 cd $LETSENCRYPT_REPOSITORY || die "Directory not founds: ${LETSENCRYPT_REPOSITORY}"
 
 service ${LETSENCRYPT_HTTP_SERVICE} stop
+
+[[ $LETSENCRYPT_USE_CDN ]] && toggle_cache "disable"
 
 ./letsencrypt-auto certonly \
 <% node["letsencrypt"]["urls"].each do |url| %>
 	           -d "<%= url %>" \
 <% end %>
 	           --renew-by-default
+
+[[ $LETSENCRYPT_USE_CDN ]] && toggle_cache "enable"
 
 service ${LETSENCRYPT_HTTP_SERVICE} start
