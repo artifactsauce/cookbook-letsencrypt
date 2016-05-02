@@ -21,11 +21,13 @@ toggle_cache() {
             die "Unexpected value: $1"
     esac
 
-    curl -X PATCH "https://api.cloudflare.com/client/v4/zones/<%= @cdn['configure']['zone_id'] %>/settings/development_mode" \
+    <% @cdn['configure']['zones'].each do |zone_id| %>
+    curl -X PATCH "https://api.cloudflare.com/client/v4/zones/<%= zone_id %>/settings/development_mode" \
          -H "X-Auth-Email: <%= @cdn['configure']['auth_email'] %>" \
          -H "X-Auth-Key: <%= @cdn['configure']['auth_key'] %>" \
          -H "Content-Type: application/json" \
-         --data '{"value":"$toggle"}'
+         --data "{\"value\":\"$toggle\"}"
+    <% end # each @cdn['configure']['zones'] %>
     <% end # case @cdn['provider'] %>
     return 0
 }
@@ -42,7 +44,7 @@ service ${LETSENCRYPT_HTTP_SERVICE} stop
 
 [[ $LETSENCRYPT_USE_CDN ]] && toggle_cache "disable"
 
-./letsencrypt-auto certonly \
+./letsencrypt-auto certonly --standalone \
 <% node["letsencrypt"]["urls"].each do |url| %>
 	           -d "<%= url %>" \
 <% end %>

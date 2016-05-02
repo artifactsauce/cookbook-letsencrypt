@@ -26,8 +26,8 @@ urls.each do |url|
   bash 'create_cert_file' do
     cwd repository_path
     code <<-EOH
-./letsencrypt-auto certonly \
--m #{node['letsencrypt']['email']}
+./letsencrypt-auto certonly --non-interactive --standalone \
+-m #{node['letsencrypt']['email']} \
 -d #{url} \
 --agree-tos
 EOH
